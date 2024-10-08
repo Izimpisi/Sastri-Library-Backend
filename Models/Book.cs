@@ -10,6 +10,7 @@ namespace Sastri_Library_Backend.Models
 
         [Required]
         public string Title { get; set; }
+        public string AuthorFirstName { get; set; }
         [Required]
         public string Description { get; set; }
         [Required]
