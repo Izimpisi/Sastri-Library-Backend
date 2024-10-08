@@ -10,11 +10,11 @@ namespace Sastri_Library_Backend.Models
 
         [Required]
 
-        public string first_Name { set; get; }
+        public string Student_FName { set; get; }
 
         [Required]
 
-        public string last_Name { set; get; }
+        public string Student_LName { set; get; }
 
      
     }
