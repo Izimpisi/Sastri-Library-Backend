@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Sastri_Library_Backend.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
