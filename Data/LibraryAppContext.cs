@@ -1,10 +1,11 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using Sastri_Library_Backend.Models;
-using System.Reflection.Metadata;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+
 
 namespace Sastri_Library_Backend.Data
 {
-    public class LibraryAppContext: DbContext
+    public class LibraryAppContext: IdentityDbContext<Student>
     {
         public LibraryAppContext(DbContextOptions<LibraryAppContext> options)
              : base(options)
