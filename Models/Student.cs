@@ -1,0 +1,8 @@
+﻿using Microsoft.AspNetCore.Identity;
+
+namespace Sastri_Library_Backend.Models
+{
+    public class Student:IdentityUser
+    {
+    }
+}
