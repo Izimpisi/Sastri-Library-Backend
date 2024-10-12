@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sastri_Library_Backend.Data;
 
@@ -10,9 +11,10 @@ using Sastri_Library_Backend.Data;
 namespace Sastri_Library_Backend.Migrations
 {
     [DbContext(typeof(LibraryAppContext))]
-    partial class LibraryAppContextModelSnapshot : ModelSnapshot
+    [Migration("20241009130815_Auth-Identity")]
+    partial class AuthIdentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -155,27 +157,19 @@ namespace Sastri_Library_Backend.Migrations
 
                     b.Property<string>("Author")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
+                        .HasColumnType("longtext");
 
-                    b.Property<string>("Date_Published")
+                    b.Property<string>("AuthorFirstName")
                         .IsRequired()
                         .HasColumnType("longtext");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasMaxLength(1000)
-                        .HasColumnType("varchar(1000)");
-
-                    b.Property<string>("ISBN")
-                        .IsRequired()
-                        .HasMaxLength(13)
-                        .HasColumnType("varchar(13)");
+                        .HasColumnType("longtext");
 
                     b.Property<string>("Title")
                         .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
+                        .HasColumnType("longtext");
 
                     b.HasKey("Id");
 
@@ -237,6 +231,7 @@ namespace Sastri_Library_Backend.Migrations
 
                     b.Property<string>("StudentIdNumber")
                         .IsRequired()
+                        .ValueGeneratedOnAdd()
                         .HasColumnType("longtext");
 
                     b.Property<bool>("TwoFactorEnabled")

@@ -5,6 +5,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using Sastri_Library_Backend.Models;
 using System.Text;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.Extensions.Options;
 
 namespace Sastri_Library_Backend
 {
@@ -19,9 +21,7 @@ namespace Sastri_Library_Backend
                 options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
             // Add Identity services
-            builder.Services.AddIdentity<Student, IdentityRole>()
-                .AddEntityFrameworkStores<LibraryAppContext>()
-                .AddDefaultTokenProviders();
+            builder.Services.AddSingleton<JwtHelper>();
 
             // JWT configuration
             var key = Encoding.ASCII.GetBytes(builder.Configuration["JwtSettings:SecretKey"]);
@@ -31,7 +31,6 @@ namespace Sastri_Library_Backend
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-
             .AddJwtBearer(options =>
             {
                 options.TokenValidationParameters = new TokenValidationParameters
@@ -43,9 +42,30 @@ namespace Sastri_Library_Backend
                     ValidIssuer = builder.Configuration["JwtSettings:Issuer"],
                     ValidAudience = builder.Configuration["JwtSettings:Audience"],
                     IssuerSigningKey = new SymmetricSecurityKey(key),
-                    ClockSkew = TimeSpan.Zero // Optional: Eliminate the default clock skew of 5 minutes
+                    ClockSkew = TimeSpan.Zero
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnChallenge = context =>
+                    {
+                        context.HandleResponse();
+                        context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                        context.Response.ContentType = "application/json";
+                        return context.Response.WriteAsync("{\"error\": \"Unauthorized\"}");
+                    },
+                    OnForbidden = context =>
+                    {
+                        context.Response.StatusCode = StatusCodes.Status403Forbidden;
+                        context.Response.ContentType = "application/json";
+                        return context.Response.WriteAsync("{\"error\": \"Forbidden\"}");
+                    }
                 };
             });
+
+            // Add authorization services
+            builder.Services.AddAuthorization();
+
 
             builder.Services.AddIdentity<Student, IdentityRole>(options =>
             {
@@ -80,7 +100,8 @@ namespace Sastri_Library_Backend
                     {
                         builder.WithOrigins("http://localhost:3000")
                                .AllowAnyHeader()
-                               .AllowAnyMethod();
+                               .AllowAnyMethod()
+                               .AllowCredentials();
                     });
             });
 
@@ -103,6 +124,21 @@ namespace Sastri_Library_Backend
 
             app.UseHttpsRedirection();
 
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Cookies.TryGetValue("Bearer", out var token))
+                {
+                    // Add the token to the Authorization header in "Bearer [token]" format
+                    context.Request.Headers.Add("Authorization", $"Bearer {token}");
+                }
+
+                await next();
+            });
+
+
+            app.UseHttpsRedirection();
+
+            app.UseAuthentication();
             app.UseAuthorization();
 
 

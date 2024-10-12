@@ -3,21 +3,22 @@ using Microsoft.AspNetCore.Identity;
 using Sastri_Library_Backend.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sastri_Library_Backend.Models
 {
     public class Student : IdentityUser
     {
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Student_ID { set; get; }
+        [Required]
+        public string StudentIdNumber { set; get; }
 
         [Required]
 
-        public string Student_FName { set; get; }
+        public string FirstName { set; get; }
 
         [Required]
 
-        public string Student_LName { set; get; }
+        public string LastName { set; get; }
 
     }
 }
