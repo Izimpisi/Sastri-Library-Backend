@@ -12,7 +12,7 @@ namespace Sastri_Library_Backend
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
             var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -64,10 +64,16 @@ namespace Sastri_Library_Backend
             });
 
             // Add authorization services
-            builder.Services.AddAuthorization();
+            builder.Services.AddAuthorization(options =>
+            {
+                options.AddPolicy("LibrarianOnly", policy =>
+                    policy.RequireRole("Librarian"));
+                options.AddPolicy("StudentOnly", policy =>
+                    policy.RequireRole("Student"));
+            });
 
 
-            builder.Services.AddIdentity<Student, IdentityRole>(options =>
+            builder.Services.AddIdentity<User, IdentityRole>(options =>
             {
                 // Password settings
                 options.Password.RequireDigit = true;                     // Require at least one digit
@@ -112,6 +118,25 @@ namespace Sastri_Library_Backend
 
             var app = builder.Build();
 
+            using (var scope = app.Services.CreateScope())
+            {
+                var services = scope.ServiceProvider;
+                try
+                {
+                    var context = services.GetRequiredService<LibraryAppContext>();
+                    await context.Database.MigrateAsync();  // Apply migrations
+
+                    // Call the seeding method
+                    await SeedAdminUserAndRolesAsync(services);
+                }
+                catch (Exception ex)
+                {
+                    var logger = services.GetRequiredService<ILogger<Program>>();
+                    logger.LogError(ex, "An error occurred during seeding.");
+                }
+            }
+
+
             // Enable CORS
             app.UseCors("AllowLocalhost3000");
 
@@ -145,6 +170,55 @@ namespace Sastri_Library_Backend
             app.MapControllers();
 
             app.Run();
+
+            async Task SeedAdminUserAndRolesAsync(IServiceProvider services)
+            {
+                var userManager = services.GetRequiredService<UserManager<User>>();
+                var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+
+                // Create roles if they don't exist
+                if (!await roleManager.RoleExistsAsync("Admin"))
+                {
+                    await roleManager.CreateAsync(new IdentityRole("Admin"));
+                }
+
+                if (!await roleManager.RoleExistsAsync("Student"))
+                {
+                    await roleManager.CreateAsync(new IdentityRole("Student"));
+                }
+
+                // Check if the admin user already exists
+                var adminUser = await userManager.FindByEmailAsync("admin@library.com");
+                if (adminUser == null)
+                {
+                    // Create the admin user
+                    var newAdmin = new User
+                    {
+                        UserName = "sindi@sastricollege.com",
+                        FirstName = "Sindi",
+                        LastName = "Ngcobo",
+                        Email = "sindi@sastricollege.com",
+                        EmailConfirmed = true,
+                        Role = "Admin",
+                        UserIdNumber = "8605760980763"
+                    };
+                    try
+                    {
+                        var result = await userManager.CreateAsync(newAdmin, "Admin@123");
+                        if(result.Succeeded)
+                        {
+                            await userManager.AddToRoleAsync(newAdmin, "Admin");
+                        }
+                      
+                    } catch (Exception ex)
+                    {
+                        Console.WriteLine(ex);
+                    }
+                     
+
+
+                }
+            }
         }
     }
 }

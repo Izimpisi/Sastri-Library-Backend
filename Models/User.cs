@@ -7,18 +7,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Sastri_Library_Backend.Models
 {
-    public class Student : IdentityUser
+    public class User : IdentityUser
     {
         [Required]
-        public string StudentIdNumber { set; get; }
+        public string UserIdNumber { set; get; }
 
         [Required]
 
         public string FirstName { set; get; }
 
         [Required]
-
         public string LastName { set; get; }
+
+        [Required]
+        public string Role { get; set; }
 
     }
 }

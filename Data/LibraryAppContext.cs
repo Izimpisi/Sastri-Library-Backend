@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Sastri_Library_Backend.Data
 {
-    public class LibraryAppContext: IdentityDbContext<Student>
+    public class LibraryAppContext: IdentityDbContext<User>
     {
         public LibraryAppContext(DbContextOptions<LibraryAppContext> options)
              : base(options)
@@ -13,5 +13,8 @@ namespace Sastri_Library_Backend.Data
         }
 
         public DbSet<Book> Books { get; set; }
+        public DbSet<Category> Categories { get; set; }
+        public DbSet<BookCategory> BookCategories { get; set; }
+        public DbSet<Loan> Loans { get; set; }
     }
 }

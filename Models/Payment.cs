@@ -18,8 +18,10 @@ namespace Sastri_Library_Backend.Models
         [Required]
         public string Payment_Methond { get; set; }
 
-        public virtual Student Student { get; set; }
-        public virtual string Student_ID {get;set;}
+        public virtual User User { get; set; }
+
+        [ForeignKey(nameof(User))]
+        public  string UserId {get;set;}
 
         public virtual Librarian Librarian { get; set; }
         public virtual string Librarian_Id { get; set; }

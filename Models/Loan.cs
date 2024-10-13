@@ -21,8 +21,12 @@ namespace Sastri_Library_Backend.Models
         [DataType(DataType.Date, ErrorMessage = "Please enter a valid date")]
         public DateTime? ReturnDate { get; set; }
 
+        [Required]
+        [ForeignKey("StudentId")]
+        public string StudentId { get; set; }
+
         [Required(ErrorMessage = "A student is required")]
-        public virtual Student Student { get; set; }
+        public virtual User Student { get; set; }
     }
 }
 

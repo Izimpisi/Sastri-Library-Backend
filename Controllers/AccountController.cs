@@ -19,13 +19,13 @@ namespace Sastri_Library_Backend.Controllers
     public class AccountController : ControllerBase
     {
         private readonly LibraryAppContext _context;
-        private readonly UserManager<Student> _userManager;
+        private readonly UserManager<User> _userManager;
         private readonly JwtHelper _jwtHelper;
-        private readonly SignInManager<Student> _signInManager;
+        private readonly SignInManager<User> _signInManager;
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IConfiguration _configuration;
 
-        public AccountController(LibraryAppContext context, UserManager<Student> userManager, JwtHelper jwtHelper, SignInManager<Student> signInManager, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
+        public AccountController(LibraryAppContext context, UserManager<User> userManager, JwtHelper jwtHelper, SignInManager<User> signInManager, IHttpContextAccessor httpContextAccessor, IConfiguration configuration)
         {
             _context = context;
             _userManager = userManager;
@@ -42,11 +42,11 @@ namespace Sastri_Library_Backend.Controllers
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
-            var user = new Student
+            var user = new User
             {
                 UserName = model.Email,
                 Email = model.Email,
-                StudentIdNumber = model.StudentIdNumber,
+                UserIdNumber = model.StudentIdNumber,
                 FirstName = model.FirstName,
                 LastName = model.LastName
             };
@@ -118,7 +118,8 @@ namespace Sastri_Library_Backend.Controllers
                 {
                     userProfile.Email,
                     userProfile.FirstName,
-                    userProfile.LastName
+                    userProfile.LastName,
+                    userProfile.Role
                 };
 
                 return Ok(userProfileData);
