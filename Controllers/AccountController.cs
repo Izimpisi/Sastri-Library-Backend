@@ -48,24 +48,35 @@ namespace Sastri_Library_Backend.Controllers
                 Email = model.Email,
                 UserIdNumber = model.StudentIdNumber,
                 FirstName = model.FirstName,
-                LastName = model.LastName
+                LastName = model.LastName,
+                Role = "Student"
             };
 
-            var result = await _userManager.CreateAsync(user, model.Password);
-            await _signInManager.SignInAsync(user, isPersistent: false);
-
-            if (result.Succeeded)
+            try
             {
-                var token = _jwtHelper.GenerateJwtToken(user.Id, user.Email);
-                // Set the token in a cookie
-                SetTokenCookie(token);
-                return Ok(new { Message = "User created successfully", Token = token });
-            }
+                var result = await _userManager.CreateAsync(user, model.Password);
 
-            foreach (var error in result.Errors)
+                if (result.Succeeded)
+                {
+                    var token = _jwtHelper.GenerateJwtToken(user.Id, user.Email);
+                    await _signInManager.SignInAsync(user, isPersistent: false);
+                    // Set the token in a cookie
+                    SetTokenCookie(token);
+                    return Ok(new { Message = "User created successfully", Token = token });
+                }
+
+                foreach (var error in result.Errors)
+                {
+                    ModelState.AddModelError(error.Code, error.Description);
+                }
+
+            } catch (Exception ex)
             {
-                ModelState.AddModelError(error.Code, error.Description);
+                return BadRequest(ModelState);
             }
+          
+          
+
 
             return BadRequest(ModelState);
         }

@@ -43,7 +43,7 @@ namespace Sastri_Library_Backend.Controllers
             await _context.SaveChangesAsync();
 
             // Return the created book with a 201 status code
-            return CreatedAtAction(nameof(GetBookById), new { id = newBook.Id }, newBook);
+            return CreatedAtAction(nameof(GetBookById), new { id = newBook.BookId }, newBook);
         }
 
         [HttpGet("{id}")]
