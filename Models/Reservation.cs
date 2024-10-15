@@ -26,7 +26,7 @@ namespace Sastri_Library_Backend.Models
 
         [Required(ErrorMessage = "User is required")]
         [ForeignKey("UserID")]
-        public int UserID { get; set; }
+        public string UserID { get; set; }
         public virtual User User { get; set; } 
         
         [Required(ErrorMessage = "Book is required")]
