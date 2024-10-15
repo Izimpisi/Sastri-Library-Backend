@@ -31,11 +31,11 @@ namespace Sastri_Library_Backend.Models
         public string RejectionMessage { get; set; }
 
         [Required(ErrorMessage = "A student is required.")]
-        [ForeignKey(nameof(Student))]
-        public string StudentId { get; set; }
+        [ForeignKey(nameof(User))]
+        public string UserId { get; set; }
 
         [Required(ErrorMessage = "A student is required.")]
-        public virtual User Student { get; set; }
+        public virtual User User { get; set; }
 
         [Required(ErrorMessage = "A book is required.")]
         [ForeignKey(nameof(Book))]

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sastri_Library_Backend.Data;
 
@@ -10,9 +11,10 @@ using Sastri_Library_Backend.Data;
 namespace Sastri_Library_Backend.Migrations
 {
     [DbContext(typeof(LibraryAppContext))]
-    partial class LibraryAppContextModelSnapshot : ModelSnapshot
+    [Migration("20241015153013_latest")]
+    partial class latest
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

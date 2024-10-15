@@ -23,26 +23,68 @@ namespace Sastri_Library_Backend.Controllers
             _context = context;
         }
 
-        // GET: api/loan
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Loan>>> GetLoans()
-        {
-            var loans = await _context.Loans
-                .Include(l => l.Student.Id)
-                .Include(l => l.Book.Title)
-                .Include(l => l.Book.ISBN)
-                .Include(l => l.Book.Author)
-                .ToListAsync();
 
-            return Ok(loans);
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<object>>> GetLoans()
+        {
+            // Get the user ID from JWT token claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid user ID.");
+            }
+
+            // Fetch the user's role from the database
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Check if the user has the 'Admin' role
+            if (user.Role == "Admin")
+            {
+                return Forbid("You are not authorized to view loans.");
+            }
+
+
+            try
+            {
+                // Fetch loans with only specific book attributes
+                var loans = await _context.Loans
+                    .Include(l => l.User)
+                    .Select(l => new
+                    {
+                        LoanId = l.Id,
+                        User = l.UserId,
+                        Book = new
+                        {
+                            l.Book.Title,
+                            l.Book.ISBN,
+                            l.Book.Author
+                        },
+                        l.LoanDate,
+                        l.ReturnDate
+                    })
+                    .ToListAsync();
+
+                return Ok(loans);
+            } catch (Exception ex)
+            {
+                return BadRequest();
+            }
+           
         }
+
 
         // GET: api/loan/{id}
         [HttpGet("{id}")]
         public async Task<ActionResult<Loan>> GetLoan(int id)
         {
             var loan = await _context.Loans
-                .Include(l => l.Student)
+                .Include(l => l.User)
                 .Include(l => l.Book)
                 .FirstOrDefaultAsync(l => l.Id == id);
 
@@ -71,7 +113,7 @@ namespace Sastri_Library_Backend.Controllers
                 return Unauthorized("Invalid student token.");
             }
 
-            loan.StudentId = studentId; // Set StudentId from token
+            loan.UserId = studentId; // Set StudentId from token
 
             _context.Loans.Add(loan);
             await _context.SaveChangesAsync();
