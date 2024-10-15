@@ -18,9 +18,20 @@ namespace Sastri_Library_Backend.Models
         [DataType(DataType.Date, ErrorMessage = "Please enter a valid date")]
         public DateTime ExpireDate { get; set; }
 
-        [Required(ErrorMessage = "Librarian is required")]
-        [ForeignKey("LibrarianId")]
+        public bool Approved { get; set; }
+
+        [StringLength(200, ErrorMessage = "Rejection message cannot exceed 200 characters.")]
+        [Display(Name = "Rejection Message")]
+        public string RejectionMessage { get; set; }
+
+        [Required(ErrorMessage = "User is required")]
+        [ForeignKey("UserID")]
         public int UserID { get; set; }
-        public virtual User User { get; set; }
+        public virtual User User { get; set; } 
+        
+        [Required(ErrorMessage = "Book is required")]
+        [ForeignKey("BookId")]
+        public int BookId { get; set; }
+        public virtual Book Book { get; set; }
     }
 }
