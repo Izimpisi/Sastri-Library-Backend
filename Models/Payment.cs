@@ -6,24 +6,25 @@ namespace Sastri_Library_Backend.Models
     public class Payment
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Payment_ID { get; set; }
+        [Key] // Indicates this is the primary key
+        public string PaymentId { get; set; } // Followed PascalCase for property names
 
-        [Required]
+        [Required(ErrorMessage = "Amount is required.")]
+        [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
         public double Amount { get; set; }
 
+        [Required(ErrorMessage = "Payment Date is required.")]
+        [DataType(DataType.Date)] // Indicates that this is a date
+        public DateTime PaymentDate { get; set; }
 
-        [Required]
-        public DateTime Payment_Date { get; set; }
+        [Required(ErrorMessage = "Payment Method is required.")]
+        [StringLength(50, ErrorMessage = "Payment Method cannot exceed 50 characters.")]
+        public string PaymentMethod { get; set; } // Corrected spelling
 
-        [Required]
-        public string Payment_Methond { get; set; }
+        [ForeignKey(nameof(User))]
+        public string UserId { get; set; }
 
         public virtual User User { get; set; }
 
-        [ForeignKey(nameof(User))]
-        public  string UserId {get;set;}
-
-        public virtual Librarian Librarian { get; set; }
-        public virtual string Librarian_Id { get; set; }
     }
 }

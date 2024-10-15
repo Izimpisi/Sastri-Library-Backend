@@ -20,7 +20,7 @@ namespace Sastri_Library_Backend.Models
 
         [Required(ErrorMessage = "Librarian is required")]
         [ForeignKey("LibrarianId")]
-        public int LibrarianId { get; set; }
-        public virtual Librarian Librarian { get; set; }
+        public int UserID { get; set; }
+        public virtual User User { get; set; }
     }
 }

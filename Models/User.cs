@@ -1,26 +1,35 @@
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Identity;
-using Sastri_Library_Backend.Models;
-using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
-using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
 namespace Sastri_Library_Backend.Models
 {
     public class User : IdentityUser
     {
-        [Required]
-        public string UserIdNumber { set; get; }
+        [Required(ErrorMessage = "User ID Number is required.")]
+        [StringLength(20, MinimumLength = 5, ErrorMessage = "User ID Number must be between 5 and 20 characters.")]
+        public string UserIdNumber { get; set; }
 
-        [Required]
+        [Required(ErrorMessage = "First Name is required.")]
+        [StringLength(50, ErrorMessage = "First Name cannot exceed 50 characters.")]
+        [RegularExpression(@"^[A-Za-z]+$", ErrorMessage = "First Name can only contain letters.")]
+        public string FirstName { get; set; }
 
-        public string FirstName { set; get; }
+        [Required(ErrorMessage = "Last Name is required.")]
+        [StringLength(50, ErrorMessage = "Last Name cannot exceed 50 characters.")]
+        [RegularExpression(@"^[A-Za-z]+$", ErrorMessage = "Last Name can only contain letters.")]
+        public string LastName { get; set; }
 
-        [Required]
-        public string LastName { set; get; }
-
-        [Required]
+        [Required(ErrorMessage = "Role is required.")]
+        [StringLength(20, ErrorMessage = "Role cannot exceed 20 characters.")]
+        [RegularExpression(@"^(Librarian|Student|Admin)$",
+            ErrorMessage = "Role must be either 'Librarian', 'Student', or 'Admin'.")]
         public string Role { get; set; }
 
+        [EmailAddress(ErrorMessage = "Invalid Email Address format.")]
+        public override string Email { get; set; }
+
+        [Phone(ErrorMessage = "Invalid phone number format.")]
+        public override string PhoneNumber { get; set; }
     }
 }

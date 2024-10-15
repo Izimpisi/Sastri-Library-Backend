@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -10,7 +11,7 @@ using Sastri_Library_Backend.Models;
 
 namespace Sastri_Library_Backend.Controllers
 {
-    [Authorize(Roles = "Student")] // Only allow access for students
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     [Route("api/[controller]")]
     [ApiController]
     public class LoanController : ControllerBase
@@ -27,8 +28,10 @@ namespace Sastri_Library_Backend.Controllers
         public async Task<ActionResult<IEnumerable<Loan>>> GetLoans()
         {
             var loans = await _context.Loans
-                .Include(l => l.Student)
-                .Include(l => l.Book)
+                .Include(l => l.Student.Id)
+                .Include(l => l.Book.Title)
+                .Include(l => l.Book.ISBN)
+                .Include(l => l.Book.Author)
                 .ToListAsync();
 
             return Ok(loans);

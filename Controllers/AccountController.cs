@@ -5,11 +5,6 @@ using Sastri_Library_Backend.Data;
 using Sastri_Library_Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
-using Microsoft.EntityFrameworkCore;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Http;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace Sastri_Library_Backend.Controllers
@@ -58,6 +53,7 @@ namespace Sastri_Library_Backend.Controllers
 
                 if (result.Succeeded)
                 {
+                    var roleResult = await _userManager.AddToRoleAsync(user, "Student");
                     var token = _jwtHelper.GenerateJwtToken(user.Id, user.Email);
                     await _signInManager.SignInAsync(user, isPersistent: false);
                     // Set the token in a cookie
@@ -75,8 +71,6 @@ namespace Sastri_Library_Backend.Controllers
                 return BadRequest(ModelState);
             }
           
-          
-
 
             return BadRequest(ModelState);
         }

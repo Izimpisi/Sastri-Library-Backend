@@ -10,35 +10,38 @@ namespace Sastri_Library_Backend.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Loan date is required")]
-        [DataType(DataType.Date, ErrorMessage = "Please enter a valid date")]
+        [Required(ErrorMessage = "Loan date is required.")]
+        [DataType(DataType.Date, ErrorMessage = "Please enter a valid date.")]
+        [Display(Name = "Loan Date")]
         public DateTime LoanDate { get; set; }
 
-        [Required(ErrorMessage = "Due date is required")]
-        [DataType(DataType.Date, ErrorMessage = "Please enter a valid date")]
+        [Required(ErrorMessage = "Due date is required.")]
+        [DataType(DataType.Date, ErrorMessage = "Please enter a valid date.")]
+        [Display(Name = "Due Date")]
         public DateTime DueDate { get; set; }
 
-        [DataType(DataType.Date, ErrorMessage = "Please enter a valid date")]
+        [DataType(DataType.Date, ErrorMessage = "Please enter a valid date.")]
+        [Display(Name = "Return Date")]
         public DateTime? ReturnDate { get; set; }
 
         public bool Approved { get; set; }
 
-        [StringLength(200)]
+        [StringLength(200, ErrorMessage = "Rejection message cannot exceed 200 characters.")]
+        [Display(Name = "Rejection Message")]
         public string RejectionMessage { get; set; }
 
-        [Required]
-        [ForeignKey("StudentId")]
+        [Required(ErrorMessage = "A student is required.")]
+        [ForeignKey(nameof(Student))]
         public string StudentId { get; set; }
 
-        [Required(ErrorMessage = "A student is required")]
-        public virtual User Student { get; set; } 
-        
-        [Required]
-        [ForeignKey("BookId")]
+        [Required(ErrorMessage = "A student is required.")]
+        public virtual User Student { get; set; }
+
+        [Required(ErrorMessage = "A book is required.")]
+        [ForeignKey(nameof(Book))]
         public int BookId { get; set; }
 
-        [Required(ErrorMessage = "A student is required")]
+        [Required(ErrorMessage = "A book is required.")]
         public virtual Book Book { get; set; }
     }
 }
-
