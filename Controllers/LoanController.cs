@@ -52,23 +52,18 @@ namespace Sastri_Library_Backend.Controllers
 
             try
             {
-                // Fetch loans with only specific book attributes
                 var loans = await _context.Loans
-                    .Include(l => l.User)
-                    .Select(l => new
-                    {
-                        LoanId = l.Id,
-                        User = l.UserId,
-                        Book = new
-                        {
-                            l.Book.Title,
-                            l.Book.ISBN,
-                            l.Book.Author
-                        },
-                        l.LoanDate,
-                        l.ReturnDate
-                    })
-                    .ToListAsync();
+            .Select(l => new
+            {
+                LoanId = l.Id,
+                l.UserId,
+                l.Book.Title,
+                l.Book.ISBN,
+                l.Book.Author,
+                l.LoanDate,
+                l.ReturnDate
+            })
+            .ToListAsync();
 
                 return Ok(loans);
             } catch (Exception ex)
