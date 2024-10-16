@@ -16,5 +16,6 @@ namespace Sastri_Library_Backend.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<BookCategory> BookCategories { get; set; }
         public DbSet<Loan> Loans { get; set; }
+        public DbSet<Reservation> Reservations { get; set; }
     }
 }
