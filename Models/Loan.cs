@@ -10,9 +10,7 @@ namespace Sastri_Library_Backend.Models
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        [Required(ErrorMessage = "Loan date is required.")]
         [DataType(DataType.Date, ErrorMessage = "Please enter a valid date.")]
-        [Display(Name = "Loan Date")]
         public DateTime LoanDate { get; set; }
 
         [Required(ErrorMessage = "Due date is required.")]
@@ -43,5 +41,10 @@ namespace Sastri_Library_Backend.Models
 
         [Required(ErrorMessage = "A book is required.")]
         public virtual Book Book { get; set; }
+        public Loan()
+        {
+            Approved = false;
+            RejectionMessage = "Pending";
+        }
     }
 }
