@@ -118,23 +118,23 @@ namespace Sastri_Library_Backend
 
             var app = builder.Build();
 
-            using (var scope = app.Services.CreateScope())
-            {
-                var services = scope.ServiceProvider;
-                try
-                {
-                    var context = services.GetRequiredService<LibraryAppContext>();
-                    await context.Database.MigrateAsync();  // Apply migrations
+            //using (var scope = app.Services.CreateScope())
+            //{
+            //    var services = scope.ServiceProvider;
+            //    try
+            //    {
+            //        var context = services.GetRequiredService<LibraryAppContext>();
+            //        await context.Database.MigrateAsync();  // Apply migrations
 
-                    // Call the seeding method
-                    await SeedAdminUserAndRolesAsync(services);
-                }
-                catch (Exception ex)
-                {
-                    var logger = services.GetRequiredService<ILogger<Program>>();
-                    logger.LogError(ex, "An error occurred during seeding.");
-                }
-            }
+            //        // Call the seeding method
+            //        await SeedAdminUserAndRolesAsync(services);
+            //    }
+            //    catch (Exception ex)
+            //    {
+            //        var logger = services.GetRequiredService<ILogger<Program>>();
+            //        logger.LogError(ex, "An error occurred during seeding.");
+            //    }
+            //}
 
 
             // Enable CORS

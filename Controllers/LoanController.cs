@@ -91,9 +91,9 @@ namespace Sastri_Library_Backend.Controllers
             return Ok(loan);
         }
 
-        // POST: api/loan
+
         [HttpPost]
-        public async Task<ActionResult<Loan>> CreateLoan([FromBody] Loan loan)
+        public async Task<ActionResult<Loan>> CreateLoan([FromBody] LoanDto loan)
         {
             if (loan == null)
             {
@@ -108,12 +108,17 @@ namespace Sastri_Library_Backend.Controllers
                 return Unauthorized("Invalid student token.");
             }
 
-            loan.UserId = studentId; // Set StudentId from token
+            var newLoan = new Loan
+            {
+                UserId = studentId,
+                BookId = loan.BookId,
+                DueDate = loan.Duedate
+            };
 
-            _context.Loans.Add(loan);
+            _context.Loans.Add(newLoan);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetLoan), new { id = loan.Id }, loan);
+            return CreatedAtAction(nameof(GetLoan), new { id = newLoan.Id }, loan);
         }
 
         // PUT: api/loan/{id}
@@ -162,6 +167,12 @@ namespace Sastri_Library_Backend.Controllers
         private bool LoanExists(int id)
         {
             return _context.Loans.Any(e => e.Id == id);
+        }
+
+        public class LoanDto
+        {
+            public int BookId { get; set; }
+            public DateTime Duedate { get; set; }
         }
     }
 }
