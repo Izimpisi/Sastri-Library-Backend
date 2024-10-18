@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Sastri_Library_Backend.Data;
 
@@ -10,9 +11,10 @@ using Sastri_Library_Backend.Data;
 namespace Sastri_Library_Backend.Migrations
 {
     [DbContext(typeof(LibraryAppContext))]
-    partial class LibraryAppContextModelSnapshot : ModelSnapshot
+    [Migration("20241018204104_changemodel")]
+    partial class changemodel
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -227,9 +229,6 @@ namespace Sastri_Library_Backend.Migrations
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
-
-                    b.Property<bool>("Active")
-                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("Approved")
                         .HasColumnType("tinyint(1)");

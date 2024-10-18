@@ -61,7 +61,10 @@ namespace Sastri_Library_Backend.Controllers
                     l.Book.Author,
                     l.LoanDate,
                     l.ReturnDate,
-                    l.DueDate
+                    l.DueDate,
+                    l.Message,
+                    l.Approved,
+                    l.Active
                 }).Where(l => l.UserId == userId)
             .ToListAsync();
 
@@ -113,7 +116,10 @@ namespace Sastri_Library_Backend.Controllers
                     l.Book.Author,
                     l.LoanDate,
                     l.ReturnDate,
-                    l.DueDate
+                    l.DueDate,
+                    l.Message,
+                    l.Approved,
+                    l.Active
                 })
             .ToListAsync();
 
@@ -172,6 +178,48 @@ namespace Sastri_Library_Backend.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetLoan), new { id = newLoan.Id }, loan);
+        }
+
+        [HttpPost("{id}/approve")]
+        public async Task<IActionResult> ApproveLoan(int id)
+        {
+            // Get the user ID from JWT token claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid user ID.");
+            }
+
+            // Fetch the user's role from the database
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Check if the user has the 'Admin' role
+            if (user.Role != "Admin")
+            {
+                return Forbid("You are not authorized to approve loans.");
+            }
+
+            // Find the loan to approve
+            var loan = await _context.Loans.FindAsync(id);
+            if (loan == null)
+            {
+                return NotFound("Loan not found.");
+            }
+
+            
+            loan.Active = true;
+            loan.Approved = true; 
+            loan.Message = "Approved"; 
+            loan.LoanDate = DateTime.Now; 
+
+            // Save changes to the database
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Return 204 No Content on success
         }
 
         // PUT: api/loan/{id}

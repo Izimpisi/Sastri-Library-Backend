@@ -23,10 +23,10 @@ namespace Sastri_Library_Backend.Models
         public DateTime? ReturnDate { get; set; }
 
         public bool Approved { get; set; }
+        public bool Active { get; set; }
 
         [StringLength(200, ErrorMessage = "Rejection message cannot exceed 200 characters.")]
-        [Display(Name = "Rejection Message")]
-        public string? RejectionMessage { get; set; }
+        public string? Message { get; set; }
 
         [ForeignKey(nameof(User))]
         public string UserId { get; set; }
@@ -39,8 +39,9 @@ namespace Sastri_Library_Backend.Models
         public virtual Book? Book { get; set; }
         public Loan()
         {
+            Active = false;
             Approved = false;
-            RejectionMessage = "Pending";
+            Message = "Pending";
         }
     }
 }
