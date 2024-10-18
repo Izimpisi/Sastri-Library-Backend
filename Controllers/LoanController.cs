@@ -52,25 +52,78 @@ namespace Sastri_Library_Backend.Controllers
 
             try
             {
-                var loans = await _context.Loans
-            .Select(l => new
-            {
-                LoanId = l.Id,
-                l.UserId,
-                l.Book.Title,
-                l.Book.ISBN,
-                l.Book.Author,
-                l.LoanDate,
-                l.ReturnDate
-            })
+                var loans = await _context.Loans.Select(l => new
+                {
+                    LoanId = l.Id,
+                    l.UserId,
+                    l.Book.Title,
+                    l.Book.ISBN,
+                    l.Book.Author,
+                    l.LoanDate,
+                    l.ReturnDate,
+                    l.DueDate
+                }).Where(l => l.UserId == userId)
             .ToListAsync();
 
                 return Ok(loans);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 return BadRequest();
             }
-           
+
+        }
+
+        [HttpGet("list")]
+        public async Task<ActionResult<IEnumerable<object>>> GetAllLoans()
+        {
+            // Get the user ID from JWT token claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid user ID.");
+            }
+
+            // Fetch the user's role from the database
+            var user = await _context.Users.FindAsync(userId);
+
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Check if the user has the 'Admin' role
+            if (user.Role == "Student")
+            {
+                return Forbid("You are not authorized to view loans.");
+            }
+
+
+            try
+            {
+                var loans = await _context.Loans.Select(l => new
+                {
+                    LoanId = l.Id,
+                    l.UserId,
+                    l.User.FirstName,
+                    l.User.LastName,
+                    l.Book.Title,
+                    l.Book.ISBN,
+                    l.Book.Author,
+                    l.LoanDate,
+                    l.ReturnDate,
+                    l.DueDate
+                })
+            .ToListAsync();
+
+                return Ok(loans);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest();
+            }
+
         }
 
 

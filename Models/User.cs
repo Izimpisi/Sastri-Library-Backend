@@ -25,11 +25,5 @@ namespace Sastri_Library_Backend.Models
         [RegularExpression(@"^(Librarian|Student|Admin)$",
             ErrorMessage = "Role must be either 'Librarian', 'Student', or 'Admin'.")]
         public string Role { get; set; }
-
-        [EmailAddress(ErrorMessage = "Invalid Email Address format.")]
-        public override string Email { get; set; }
-
-        [Phone(ErrorMessage = "Invalid phone number format.")]
-        public override string PhoneNumber { get; set; }
     }
 }

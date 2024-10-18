@@ -87,7 +87,8 @@ namespace Sastri_Library_Backend
                 options.User.RequireUniqueEmail = true;                   // Email must be unique
 
                 // Sign-in settings
-                options.SignIn.RequireConfirmedEmail = false;              // Require confirmed email for sign-in
+                options.SignIn.RequireConfirmedEmail = false;
+            
 
                 // Lockout settings
                 options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5); // Lockout time for 5 minutes
