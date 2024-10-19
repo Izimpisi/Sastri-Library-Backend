@@ -1,30 +1,28 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Sastri_Library_Backend.Models
 {
     public class Payment
     {
+        [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        [Key] // Indicates this is the primary key
-        public string PaymentId { get; set; } // Followed PascalCase for property names
+        public string Id { get; set; }
 
         [Required(ErrorMessage = "Amount is required.")]
+        [Column(TypeName = "decimal(18, 2)")]
         [Range(0.01, double.MaxValue, ErrorMessage = "Amount must be greater than zero.")]
-        public double Amount { get; set; }
+        public decimal AmountPaid { get; set; }
 
-        [Required(ErrorMessage = "Payment Date is required.")]
-        [DataType(DataType.Date)] // Indicates that this is a date
+        [Required]
+        [DataType(DataType.Date)]
         public DateTime PaymentDate { get; set; }
 
-        [Required(ErrorMessage = "Payment Method is required.")]
-        [StringLength(50, ErrorMessage = "Payment Method cannot exceed 50 characters.")]
-        public string PaymentMethod { get; set; } // Corrected spelling
+        [Required]
+        public int BillId { get; set; }
 
-        [ForeignKey(nameof(User))]
-        public string UserId { get; set; }
-
-        public virtual User User { get; set; }
-
+        [ForeignKey(nameof(BillId))]
+        public virtual Bill Bill { get; set; }
     }
 }

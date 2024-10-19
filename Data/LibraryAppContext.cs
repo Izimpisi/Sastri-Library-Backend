@@ -1,11 +1,12 @@
 using Microsoft.EntityFrameworkCore;
 using Sastri_Library_Backend.Models;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace Sastri_Library_Backend.Data
 {
-    public class LibraryDbContext : DbContext
+    public class LibraryAppContext : IdentityDbContext<User>
     {
-        public LibraryDbContext(DbContextOptions<LibraryDbContext> options)
+        public LibraryAppContext(DbContextOptions<LibraryAppContext> options)
             : base(options)
         {
         }
@@ -18,5 +19,6 @@ namespace Sastri_Library_Backend.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<User> Users { get; set; }
+        public DbSet<Bill> Bill { get; set; }
     }
 }
