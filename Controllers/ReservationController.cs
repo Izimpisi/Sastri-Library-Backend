@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sastri_Library_Backend.Data;
@@ -9,100 +10,216 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-[Route("api/[controller]")]
-[ApiController]
-public class ReservationController : ControllerBase
+namespace Sastri_Library_Backend.Controllers
 {
-    private readonly LibraryAppContext _context;
+    [Route("api/[controller]")]
+    [ApiController]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
 
-    public ReservationController(LibraryAppContext context)
+    public class ReservationController : ControllerBase
     {
-        _context = context;
-    }
+        private readonly LibraryAppContext _context;
 
-    // POST: api/reservation
-    [HttpPost]
-    public async Task<ActionResult<Reservation>> CreateReservation([FromBody] Reservation reservation)
-    {
-        if (reservation == null || reservation.BookId <= 0)
+        public ReservationController(LibraryAppContext context)
         {
-            return BadRequest("Reservation data is required.");
+            _context = context;
         }
 
-        // Get UserId from token
-        var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userId))
+        // POST: api/reservation
+        [HttpPost]
+        public async Task<ActionResult<Reservation>> CreateReservation([FromBody] ReservvationDto reservation)
         {
-            return Unauthorized("Invalid user token.");
+            if (reservation == null || reservation.BookId <= 0)
+            {
+                return BadRequest("Reservation data is required.");
+            }
+
+            // Get UserId from token
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid user token.");
+            }
+
+            var book = await _context.Books.FindAsync(reservation.BookId);
+
+            if (book == null)
+            {
+                return NotFound("Book not found.");
+            }
+
+            if (book.IsOnLoan)
+            {
+                return StatusCode(403, "The book is already on loan.");
+            }
+
+            if (book.IsOnReservation)
+            {
+                return StatusCode(403, "The book is already reserved.");
+            }
+           
+            // Create reservation
+            Reservation newReservation = new Reservation();
+            newReservation.BookId = reservation.BookId;
+            newReservation.UserID = userId;
+
+
+            _context.Reservations.Add(newReservation);
+            await _context.SaveChangesAsync();
+
+            return CreatedAtAction(nameof(GetReservation), new { id = newReservation.Id }, reservation);
         }
 
-        // Check if the book exists
-        var bookExists = await _context.Books.AnyAsync(b => b.BookId == reservation.BookId);
-        if (!bookExists)
+        // GET: api/reservation/{id}
+        [HttpGet("{id}")]
+        public async Task<ActionResult<Reservation>> GetReservation(int id)
         {
-            return NotFound("The specified book does not exist.");
-        }
-        
-        // Create reservation
-        reservation.UserID = userId; // Set UserId from token
-        reservation.ReservationDate = DateTime.UtcNow;
-        reservation.Approved = false; // Initially set to false
+            var reservation = await _context.Reservations
+                .Include(r => r.User) // Assuming you have a User navigation property
+                .Include(r => r.Book)
+                .FirstOrDefaultAsync(r => r.Id == id);
 
-        _context.Reservations.Add(reservation);
-        await _context.SaveChangesAsync();
+            if (reservation == null)
+            {
+                return NotFound();
+            }
 
-        return CreatedAtAction(nameof(GetReservation), new { id = reservation.Id }, reservation);
-    }
-
-    // GET: api/reservation/{id}
-    [HttpGet("{id}")]
-    public async Task<ActionResult<Reservation>> GetReservation(int id)
-    {
-        var reservation = await _context.Reservations
-            .Include(r => r.User) // Assuming you have a User navigation property
-            .Include(r => r.Book)
-            .FirstOrDefaultAsync(r => r.Id == id);
-
-        if (reservation == null)
-        {
-            return NotFound();
+            return Ok(reservation);
         }
 
-        return Ok(reservation);
-    }
 
-    
-    [HttpGet]
-    public async Task<ActionResult<IEnumerable<Reservation>>> GetReservationsByUser()
-    {
-        var userID = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-        if (string.IsNullOrEmpty(userID))
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<Reservation>>> GetReservationsByUser()
         {
-            return Unauthorized("Invalid user token.");
+            var userID = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userID))
+            {
+                return Unauthorized("Invalid user token.");
+            }
+
+            var reservations = await _context.Reservations
+            .Where(r => r.UserID == userID)
+            .Select(r => new
+            {
+                r.Id,
+                r.ReservationDate,
+                r.ExpireDate,
+                r.Approved,
+                r.Active,
+                r.Message,
+
+                // Flattening the book details
+                r.Book.BookId,
+                r.Book.Title,
+                r.Book.Author,
+                r.Book.ISBN,
+                r.Book.Description,
+                r.Book.Date_Published,
+                r.Book.IsOnLoan,
+                r.Book.IsOnReservation
+            })
+      .ToListAsync();
+
+
+            return Ok(reservations);
         }
 
-        var reservations = await _context.Reservations
-            .Include(r => r.Book)
-            .ToListAsync();
-
-        return Ok(reservations);
-    }
-
-    // PUT: api/reservation/approve/{id}
-    [HttpPut("approve/{id}")]
-    public async Task<IActionResult> ApproveReservation(int id)
-    {
-        var reservation = await _context.Reservations.FindAsync(id);
-        if (reservation == null)
+        [HttpGet("list")]
+        public async Task<ActionResult<IEnumerable<Reservation>>> GetAllReservations()
         {
-            return NotFound();
+            var userID = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userID))
+            {
+                return Unauthorized("Invalid user token.");
+            }
+
+            var reservations = await _context.Reservations
+            .Select(r => new
+            {
+                r.User.FirstName, 
+                r.User.LastName,
+                r.Id,
+                r.ReservationDate,
+                r.ExpireDate,
+                r.Approved,
+                r.Active,
+                r.Message,
+
+                // Flattening the book details
+                r.Book.BookId,
+                r.Book.Title,
+                r.Book.Author,
+                r.Book.ISBN,
+                r.Book.Description,
+                r.Book.Date_Published,
+                r.Book.IsOnLoan,
+                r.Book.IsOnReservation
+            }).ToListAsync();
+
+            return Ok(reservations);
         }
 
-        reservation.Approved = true; // Approve the reservation
-        await _context.SaveChangesAsync();
 
-        return NoContent();
+        [HttpPost("{id}/approve")]
+        public async Task<IActionResult> ApproveReservation(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid user ID.");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+            {
+                return NotFound("User not found.");
+            }
+
+            // Check if the user has the 'Admin' role
+            if (user.Role != "Admin")
+            {
+                return Forbid("You are not authorized to approve loans.");
+            }
+
+            // Find the loan to approve
+            var reservation = await _context.Reservations.FindAsync(id);
+            if (reservation == null)
+            {
+                return NotFound("Loan not found.");
+            }
+
+            var book = await _context.Books.FindAsync(reservation.BookId);
+            if (book == null)
+            {
+                return NotFound("Book not found.");
+            }
+
+            if (book.IsOnLoan)
+            {
+                return StatusCode(403, "The book is already on loan.");
+            }
+            if (book.IsOnReservation)
+            {
+                return StatusCode(403, "The book is reserved.");
+            }
+
+            book.IsOnReservation = true;
+            reservation.Active = true;
+            reservation.Approved = true;
+            reservation.Message = "Approved";
+
+            // Save changes to the database
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // Return 204 No Content on success
+        }
+
+        public class ReservvationDto
+        {
+            public int BookId { get; set; }
+        }
     }
 }

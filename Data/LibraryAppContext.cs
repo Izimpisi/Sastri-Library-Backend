@@ -18,7 +18,6 @@ namespace Sastri_Library_Backend.Data
         public DbSet<Loan> Loans { get; set; }
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
-        public DbSet<User> Users { get; set; }
-        public DbSet<Bill> Bill { get; set; }
+        public DbSet<Bill> Bills { get; set; }
     }
 }

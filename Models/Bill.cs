@@ -20,9 +20,8 @@ namespace Sastri_Library_Backend.Models
         [Range(0, double.MaxValue, ErrorMessage = "Paid amount must be a positive value.")]
         public decimal BillPaidAmount { get; set; }
 
-        [Required]
-        [DataType(DataType.Date)]
-        public DateTime PaidDate { get; set; }
+        public int? DaysOutstanding { get; set; }
+
 
         [Required]
         public virtual User User { get; set; }

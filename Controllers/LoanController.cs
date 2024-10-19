@@ -167,6 +167,22 @@ namespace Sastri_Library_Backend.Controllers
                 return Unauthorized("Invalid student token.");
             }
 
+            var book = await _context.Books.FindAsync(loan.BookId);
+            if (book == null)
+            {
+                return NotFound("Book not found.");
+            }
+
+            if (book.IsOnLoan)
+            {
+                return StatusCode(403, "The book is already on loan.");
+            }
+
+            if (book.IsOnReservation)
+            {
+                return StatusCode(403, "The book is already reserved.");
+            }
+
             var newLoan = new Loan
             {
                 UserId = studentId,
@@ -210,11 +226,24 @@ namespace Sastri_Library_Backend.Controllers
                 return NotFound("Loan not found.");
             }
 
-            
+            var book = await _context.Books.FindAsync(loan.BookId);
+            if (book == null)
+            {
+                return NotFound("Book not found.");
+            }
+            if (book.IsOnLoan)
+            {
+                return StatusCode(403, "The book is already on loan.");
+            }
+            if (book.IsOnReservation)
+            {
+                return StatusCode(403, "The book is reserved.");
+            }
+            book.IsOnLoan = true;
             loan.Active = true;
-            loan.Approved = true; 
-            loan.Message = "Approved"; 
-            loan.LoanDate = DateTime.Now; 
+            loan.Approved = true;
+            loan.Message = "Approved";
+            loan.LoanDate = DateTime.Now;
 
             // Save changes to the database
             await _context.SaveChangesAsync();

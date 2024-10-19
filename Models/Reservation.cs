@@ -36,8 +36,10 @@ namespace Sastri_Library_Backend.Models
 
         public Reservation()
         {
-            Active = false;
-            Approved = false;
+            ReservationDate = DateTime.UtcNow;  
+            ExpireDate = ReservationDate.AddDays(1);   
+            Active = false;  
+            Approved = false; 
             Message = "Pending";
         }
     }

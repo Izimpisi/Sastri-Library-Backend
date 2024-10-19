@@ -27,12 +27,12 @@ namespace Sastri_Library_Backend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<object>>> GetAllBills()
         {
-            var bills = await _context.Bill.Select(b => new
+            var bills = await _context.Bills.Select(b => new
             {
                 b.Id,
                 b.CurrentAmountOwing,
                 b.BillPaidAmount,
-                b.PaidDate
+                b.DaysOutstanding
             }).ToListAsync();
 
             return Ok(bills);
@@ -45,12 +45,12 @@ namespace Sastri_Library_Backend.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
 
-            var bills = await _context.Bill.Select(b => new
+            var bills = await _context.Bills.Select(b => new
             {
                 b.Id,
                 b.CurrentAmountOwing,
                 b.BillPaidAmount,
-                b.PaidDate,
+                b.DaysOutstanding,
                 b.UserId
             }).Where(l => l.UserId == userId).ToListAsync();
 
@@ -62,7 +62,7 @@ namespace Sastri_Library_Backend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<Bill>> GetBill(int id)
         {
-            var bill = await _context.Bill.FindAsync(id);
+            var bill = await _context.Bills.FindAsync(id);
 
             if (bill == null)
             {
@@ -85,10 +85,10 @@ namespace Sastri_Library_Backend.Controllers
             {
                 CurrentAmountOwing = billDto.CurrentAmountOwing,
                 BillPaidAmount = billDto.BillPaidAmount,
-                PaidDate = DateTime.Now
+               
             };
 
-            _context.Bill.Add(newBill);
+            _context.Bills.Add(newBill);
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetBill), new { id = newBill.Id }, newBill);
@@ -98,7 +98,7 @@ namespace Sastri_Library_Backend.Controllers
         public async Task<ActionResult<IEnumerable<object>>> GetPaymentsByBillId(int id)
         {
             // Find the bill with the given ID
-            var bill = await _context.Bill.FindAsync(id);
+            var bill = await _context.Bills.FindAsync(id);
             if (bill == null)
             {
                 return NotFound("Bill not found.");
@@ -127,7 +127,7 @@ namespace Sastri_Library_Backend.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateBill(int id, [FromBody] BillDto billDto)
         {
-            var bill = await _context.Bill.FindAsync(id);
+            var bill = await _context.Bills.FindAsync(id);
             if (bill == null)
             {
                 return NotFound("Bill not found.");
@@ -135,7 +135,7 @@ namespace Sastri_Library_Backend.Controllers
 
             bill.CurrentAmountOwing = billDto.CurrentAmountOwing;
             bill.BillPaidAmount = billDto.BillPaidAmount;
-            bill.PaidDate = DateTime.Now;
+            
 
             _context.Entry(bill).State = EntityState.Modified;
 
@@ -159,13 +159,13 @@ namespace Sastri_Library_Backend.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteBill(int id)
         {
-            var bill = await _context.Bill.FindAsync(id);
+            var bill = await _context.Bills.FindAsync(id);
             if (bill == null)
             {
                 return NotFound("Bill not found.");
             }
 
-            _context.Bill.Remove(bill);
+            _context.Bills.Remove(bill);
             await _context.SaveChangesAsync();
 
             return NoContent();
@@ -173,7 +173,7 @@ namespace Sastri_Library_Backend.Controllers
 
         private bool BillExists(int id)
         {
-            return _context.Bill.Any(e => e.Id == id);
+            return _context.Bills.Any(e => e.Id == id);
         }
 
         public class BillDto
