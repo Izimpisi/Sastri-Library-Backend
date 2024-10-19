@@ -7,10 +7,6 @@ namespace Sastri_Library_Backend.Models
 {
     public class User : IdentityUser
     {
-        [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int UserID { get; set; }
-
         [Required(ErrorMessage = "User ID Number is required.")]
         [StringLength(20, MinimumLength = 5, ErrorMessage = "User ID Number must be between 5 and 20 characters.")]
         public string UserIdNumber { get; set; }
@@ -30,11 +26,5 @@ namespace Sastri_Library_Backend.Models
         [RegularExpression(@"^(Librarian|Student|Admin)$",
             ErrorMessage = "Role must be either 'Librarian', 'Student', or 'Admin'.")]
         public string Role { get; set; }
-
-        [EmailAddress(ErrorMessage = "Invalid Email Address format.")]
-        public override string Email { get; set; }
-
-        [Phone(ErrorMessage = "Invalid phone number format.")]
-        public override string PhoneNumber { get; set; }
     }
 }

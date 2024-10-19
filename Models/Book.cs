@@ -7,7 +7,7 @@ namespace Sastri_Library_Backend.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public int BookId { get; set; }
 
         [Required(ErrorMessage = "Title is required")]
         [StringLength(200, ErrorMessage = "Title cannot exceed 200 characters")]
@@ -29,5 +29,13 @@ namespace Sastri_Library_Backend.Models
         [StringLength(13, MinimumLength = 10, ErrorMessage = "ISBN should be between 10 and 13 characters")]
         [RegularExpression(@"\d{10}(\d{3})?", ErrorMessage = "ISBN must be a 10 or 13-digit number")]
         public string ISBN { get; set; }
+
+        [Required]
+        public bool InStore { get; set; }
+
+        public Book()
+        {
+            InStore = true;
+        }
     }
 }

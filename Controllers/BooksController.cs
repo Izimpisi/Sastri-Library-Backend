@@ -17,6 +17,40 @@ namespace Sastri_Library_Backend.Controllers
             _context = context;
         }
 
+        [HttpGet("search")]
+        public async Task<ActionResult<IEnumerable<Book>>> SearchBooks(
+        [FromQuery] string query,
+        [FromQuery] string filter)
+        {
+            if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(filter))
+            {
+                return BadRequest("Query and filter are required.");
+            }
+
+            var books = filter.ToLower() switch
+            {
+                "isbn" => _context.Books
+                    .Where(b => b.ISBN.Contains(query))
+                    .Take(5),
+                "title" => _context.Books
+                    .Where(b => b.Title.Contains(query))
+                    .Take(5),
+                "author" => _context.Books
+                    .Where(b => b.Author.Contains(query))
+                    .Take(5),
+                _ => Enumerable.Empty<Book>().AsQueryable()
+            };
+
+            var result = await books.ToListAsync();
+
+            if (!result.Any())
+            {
+                return NotFound("No books found.");
+            }
+
+            return Ok(result);
+        }
+
         // Example action method to get all books
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
@@ -43,7 +77,7 @@ namespace Sastri_Library_Backend.Controllers
             await _context.SaveChangesAsync();
 
             // Return the created book with a 201 status code
-            return CreatedAtAction(nameof(GetBookById), new { id = newBook.Id }, newBook);
+            return CreatedAtAction(nameof(GetBookById), new { id = newBook.BookId }, newBook);
         }
 
         [HttpGet("{id}")]
