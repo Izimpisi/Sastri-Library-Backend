@@ -19,10 +19,10 @@ namespace Sastri_Library_Backend.Models
         public DateTime ExpireDate { get; set; }
 
         public bool Approved { get; set; }
+        public bool Active { get; set; }
 
         [StringLength(200, ErrorMessage = "Rejection message cannot exceed 200 characters.")]
-        [Display(Name = "Rejection Message")]
-        public string RejectionMessage { get; set; }
+        public string Message { get; set; }
 
         [Required(ErrorMessage = "User is required")]
         [ForeignKey("UserID")]
@@ -33,5 +33,12 @@ namespace Sastri_Library_Backend.Models
         [ForeignKey("BookId")]
         public int BookId { get; set; }
         public virtual Book Book { get; set; }
+
+        public Reservation()
+        {
+            Active = false;
+            Approved = false;
+            Message = "Pending";
+        }
     }
 }
