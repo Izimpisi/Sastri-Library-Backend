@@ -20,7 +20,7 @@ namespace Sastri_Library_Backend.Models
         [Range(0, double.MaxValue, ErrorMessage = "Paid amount must be a positive value.")]
         public decimal BillPaidAmount { get; set; }
 
-        public int? DaysOutstanding { get; set; }
+        public DateTime DueDate { get; set; }
 
 
         [Required]
@@ -28,5 +28,11 @@ namespace Sastri_Library_Backend.Models
 
         [ForeignKey(nameof(User))]
         public string UserId { get; set; }
+
+        [Required]
+        public virtual Loan Loan { get; set; }
+
+        [ForeignKey(nameof(Loan))]
+        public int LoanId { get; set; }
     }
 }

@@ -32,7 +32,7 @@ namespace Sastri_Library_Backend.Controllers
                 b.Id,
                 b.CurrentAmountOwing,
                 b.BillPaidAmount,
-                b.DaysOutstanding
+                b.DueDate
             }).ToListAsync();
 
             return Ok(bills);
@@ -50,7 +50,7 @@ namespace Sastri_Library_Backend.Controllers
                 b.Id,
                 b.CurrentAmountOwing,
                 b.BillPaidAmount,
-                b.DaysOutstanding,
+                b.DueDate,
                 b.UserId
             }).Where(l => l.UserId == userId).ToListAsync();
 
@@ -175,6 +175,71 @@ namespace Sastri_Library_Backend.Controllers
         {
             return _context.Bills.Any(e => e.Id == id);
         }
+
+        // GET: api/bill/overdue-loans
+        [HttpGet("overdue-loans")]
+        public async Task<ActionResult<IEnumerable<object>>> GetOverdueLoansAndCreateBills()
+        {
+            // Get the user ID from JWT token claims
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // Find all active loans where the due date is in the past and the loan is not returned
+            var overdueLoans = await _context.Loans
+                .Where(l => l.UserId == userId && l.DueDate < DateTime.Now && l.Active)
+                .Select(l => new
+                {
+                    l.Id,
+                    l.DueDate,
+                    OverdueDays = EF.Functions.DateDiffDay(l.DueDate, DateTime.Now),
+                    l.User.FirstName,
+                    l.User.LastName
+                })
+                .ToListAsync();
+
+            var results = new List<object>();
+
+            foreach (var loan in overdueLoans)
+            {
+                // Check if a bill already exists for this loan
+                var existingBill = await _context.Bills
+                    .FirstOrDefaultAsync(b => b.LoanId == loan.Id);
+
+                if (existingBill != null)
+                {
+                    // Skip if a bill already exists for this loan
+                    continue;
+                }
+
+                // Calculate the amount owing
+                var amountOwing = loan.OverdueDays * 5; // 5 rands per day
+
+                // Create a new bill record
+                var newBill = new Bill
+                {
+                    LoanId = loan.Id,
+                    UserId = userId,
+                    CurrentAmountOwing = amountOwing,
+                    BillPaidAmount = 0,
+                    DueDate = loan.DueDate
+                };
+
+                _context.Bills.Add(newBill);
+                await _context.SaveChangesAsync();
+
+                results.Add(new
+                {
+                    loan.FirstName,
+                    loan.LastName,
+                    AmountOwing = amountOwing,
+                    PaidAmount = newBill.BillPaidAmount,
+                    newBill.DueDate,
+                    DaysOutstanding = loan.OverdueDays
+                });
+            }
+
+            return Ok(results);
+        }
+
 
         public class BillDto
         {
