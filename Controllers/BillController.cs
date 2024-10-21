@@ -190,13 +190,10 @@ namespace Sastri_Library_Backend.Controllers
                 {
                     l.Id,
                     l.DueDate,
-                    OverdueDays = EF.Functions.DateDiffDay(l.DueDate, DateTime.Now),
                     l.User.FirstName,
                     l.User.LastName
                 })
                 .ToListAsync();
-
-            var results = new List<object>();
 
             foreach (var loan in overdueLoans)
             {
@@ -210,15 +207,13 @@ namespace Sastri_Library_Backend.Controllers
                     continue;
                 }
 
-                // Calculate the amount owing
-                var amountOwing = loan.OverdueDays * 5; // 5 rands per day
 
                 // Create a new bill record
                 var newBill = new Bill
                 {
                     LoanId = loan.Id,
                     UserId = userId,
-                    CurrentAmountOwing = amountOwing,
+                    CurrentAmountOwing = 200,
                     BillPaidAmount = 0,
                     DueDate = loan.DueDate
                 };
@@ -226,18 +221,9 @@ namespace Sastri_Library_Backend.Controllers
                 _context.Bills.Add(newBill);
                 await _context.SaveChangesAsync();
 
-                results.Add(new
-                {
-                    loan.FirstName,
-                    loan.LastName,
-                    AmountOwing = amountOwing,
-                    PaidAmount = newBill.BillPaidAmount,
-                    newBill.DueDate,
-                    DaysOutstanding = loan.OverdueDays
-                });
             }
 
-            return Ok(results);
+            return Ok();
         }
 
 

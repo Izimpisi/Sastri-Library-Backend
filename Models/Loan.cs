@@ -16,7 +16,7 @@ namespace Sastri_Library_Backend.Models
         [Required(ErrorMessage = "Due date is required.")]
         [DataType(DataType.Date, ErrorMessage = "Please enter a valid date.")]
        
-        public DateTime DueDate { get; set; }
+        public DateTime? DueDate { get; set; }
 
         [DataType(DataType.Date, ErrorMessage = "Please enter a valid date.")]
         

@@ -173,15 +173,50 @@ namespace Sastri_Library_Backend.Controllers
                 return NotFound("Book not found.");
             }
 
+            if (book.IsOnReservation)
+            {
+                // Find the existing reservation for this book
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.BookId == book.BookId && r.Active);
+
+                if (existingReservation != null && existingReservation.ExpireDate <= DateTime.Now)
+                {
+                    // Expire the existing reservation
+                    book.IsOnReservation = false;
+                    existingReservation.Active = false;
+                    existingReservation.Approved = false;
+                    existingReservation.Message = "Expired";
+
+                    // Save the changes to the database
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             if (book.IsOnLoan)
             {
-                return StatusCode(403, "The book is already on loan.");
+                return StatusCode(403, "Temporarily Unavailable: This book is out on Loan.");
             }
 
             if (book.IsOnReservation)
             {
-                return StatusCode(403, "The book is already reserved.");
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.BookId == book.BookId && r.Active);
+
+                if (existingReservation != null)
+                {
+                    if (existingReservation.UserID == studentId)
+                    {
+                        existingReservation.Message = "Used";
+                        existingReservation.Active = false;
+                        book.IsOnReservation = false;
+                    }
+                    else
+                    {
+                        return StatusCode(403, "The book is already reserved.");
+                    }
+                }
             }
+
 
             var newLoan = new Loan
             {
@@ -227,18 +262,55 @@ namespace Sastri_Library_Backend.Controllers
             }
 
             var book = await _context.Books.FindAsync(loan.BookId);
+
+            if (book.IsOnReservation)
+            {
+                // Find the existing reservation for this book
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.BookId == book.BookId && r.Active);
+
+                if (existingReservation != null && existingReservation.ExpireDate <= DateTime.Now)
+                {
+                    // Expire the existing reservation
+                    book.IsOnReservation = false;
+                    existingReservation.Active = false;
+                    existingReservation.Approved = false;
+                    existingReservation.Message = "Expired";
+
+                    // Save the changes to the database
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             if (book == null)
             {
                 return NotFound("Book not found.");
             }
             if (book.IsOnLoan)
             {
-                return StatusCode(403, "The book is already on loan.");
+                return StatusCode(403, "Temporarily Unavailable: This book is out on Loan.");
             }
+
             if (book.IsOnReservation)
             {
-                return StatusCode(403, "The book is reserved.");
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.BookId == book.BookId && r.Active);
+
+                if (existingReservation != null)
+                {
+                    if (existingReservation.UserID == userId)
+                    {
+                        existingReservation.Message = "Used";
+                        existingReservation.Active = false;
+                        book.IsOnReservation = false;
+                    }
+                    else
+                    {
+                        return StatusCode(403, "The book is already reserved.");
+                    }
+                }
             }
+
             book.IsOnLoan = true;
             loan.Active = true;
             loan.Approved = true;
@@ -249,6 +321,69 @@ namespace Sastri_Library_Backend.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent(); // Return 204 No Content on success
+        }
+
+        [HttpPost("{id}/return")]
+        public async Task<IActionResult> ReturnLoan(int id)
+        {
+            // Find the loan by ID
+            var loan = await _context.Loans.Include(l => l.Book).FirstOrDefaultAsync(l => l.Id == id);
+            if (loan == null)
+            {
+                return NotFound("Loan not found.");
+            }
+
+            // Find the associated book and set IsOnLoan to false
+            var book = loan.Book;
+            if (book == null)
+            {
+                return NotFound("Book not found.");
+            }
+            book.IsOnLoan = false;
+            book.IsOnReservation = false;
+
+            // Set the loan's ReturnDate to today
+            loan.ReturnDate = DateTime.Now;
+            loan.Active = false;
+            loan.Message = "Returned";
+
+            // Check if the ReturnDate is after the DueDate (i.e., the loan is overdue)
+            if (loan.ReturnDate > loan.DueDate)
+            {
+                TimeSpan difference = loan.ReturnDate.Value - loan.DueDate.Value;
+
+                // Get the total number of days from the TimeSpan
+                int overdueDays = Convert.ToInt32(difference.TotalDays);
+
+                // Check if a bill already exists for this loan
+                var existingBill = await _context.Bills.FirstOrDefaultAsync(b => b.LoanId == loan.Id);
+
+                if (existingBill == null)
+                {
+                    // Create a new bill if none exists
+                    var newBill = new Bill
+                    {
+                        LoanId = loan.Id,
+                        UserId = loan.UserId,
+                        DueDate = loan.DueDate,
+                        CurrentAmountOwing = overdueDays * 3, // 3 rands per day
+                        BillPaidAmount = 0,
+                        DaysOverdue = overdueDays
+                    };
+                    _context.Bills.Add(newBill);
+                }
+                else
+                {
+                    // Update the existing bill with overdue details
+                    existingBill.DaysOverdue = overdueDays;
+                    existingBill.CurrentAmountOwing = overdueDays * 3; // 3 rands per day
+                }
+            }
+
+            // Save changes to the database
+            await _context.SaveChangesAsync();
+
+            return NoContent(); // 204 No Content on success
         }
 
         // PUT: api/loan/{id}

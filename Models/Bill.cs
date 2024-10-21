@@ -20,7 +20,9 @@ namespace Sastri_Library_Backend.Models
         [Range(0, double.MaxValue, ErrorMessage = "Paid amount must be a positive value.")]
         public decimal BillPaidAmount { get; set; }
 
-        public DateTime DueDate { get; set; }
+        public DateTime? DueDate { get; set; }
+
+        public int? DaysOverdue { get; set; }
 
 
         [Required]

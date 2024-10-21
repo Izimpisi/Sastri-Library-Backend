@@ -49,6 +49,25 @@ namespace Sastri_Library_Backend.Controllers
                 return NotFound("Book not found.");
             }
 
+            if (book.IsOnReservation)
+            {
+                // Find the existing reservation for this book
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.BookId == book.BookId && r.Active);
+
+                if (existingReservation != null && existingReservation.ExpireDate <= DateTime.Now)
+                {
+                    // Expire the existing reservation
+                    book.IsOnReservation = false;
+                    existingReservation.Active = false;
+                    existingReservation.Approved = false;
+                    existingReservation.Message = "Expired";
+
+                    // Save the changes to the database
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             if (book.IsOnLoan)
             {
                 return StatusCode(403, "The book is already on loan.");
@@ -56,10 +75,9 @@ namespace Sastri_Library_Backend.Controllers
 
             if (book.IsOnReservation)
             {
-                return StatusCode(403, "The book is already reserved.");
+                return StatusCode(403, "The book is reserved.");
             }
-           
-            // Create reservation
+
             Reservation newReservation = new Reservation();
             newReservation.BookId = reservation.BookId;
             newReservation.UserID = userId;
@@ -139,7 +157,7 @@ namespace Sastri_Library_Backend.Controllers
             var reservations = await _context.Reservations
             .Select(r => new
             {
-                r.User.FirstName, 
+                r.User.FirstName,
                 r.User.LastName,
                 r.Id,
                 r.ReservationDate,
@@ -195,6 +213,25 @@ namespace Sastri_Library_Backend.Controllers
             if (book == null)
             {
                 return NotFound("Book not found.");
+            }
+
+            if (book.IsOnReservation)
+            {
+                // Find the existing reservation for this book
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.BookId == book.BookId && r.Active);
+
+                if (existingReservation != null && existingReservation.ExpireDate <= DateTime.Now)
+                {
+                    // Expire the existing reservation
+                    book.IsOnReservation = false;
+                    existingReservation.Active = false;
+                    existingReservation.Approved = false;
+                    existingReservation.Message = "Expired";
+
+                    // Save the changes to the database
+                    await _context.SaveChangesAsync();
+                }
             }
 
             if (book.IsOnLoan)
