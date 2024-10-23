@@ -1,12 +1,16 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Sastri_Library_Backend.Data;
 using Sastri_Library_Backend.Models;
+using System.Security.Claims;
 
 namespace Sastri_Library_Backend.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public class BooksController : ControllerBase
     {
         private readonly LibraryAppContext _context;
@@ -143,23 +147,47 @@ namespace Sastri_Library_Backend.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> AddBook([FromBody] Book newBook)
         {
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid user ID.");
+            }
+
             if (newBook == null)
             {
                 return BadRequest("Book is null.");
             }
 
-            // Validate the book model
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            // Add the new book to the database
             await _context.Books.AddAsync(newBook);
-            await _context.SaveChangesAsync();
 
-            // Return the created book with a 201 status code
-            return CreatedAtAction(nameof(GetBookById), new { id = newBook.BookId }, newBook);
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                var log = new BookUpdateLog
+                {
+                    ActionType = "Add",
+                    Description = $"Added a new book: {newBook.Title} - {newBook.ISBN}",
+                    ActionTime = DateTime.UtcNow, 
+                    UserId = userId 
+                };
+
+                _context.BookUpdateLogs.Add(log);
+                await _context.SaveChangesAsync();
+
+                return CreatedAtAction(nameof(GetBookById), new { id = newBook.BookId }, newBook);
+            }
+            catch (Exception ex)
+            {
+                // Handle exceptions (e.g., log the error)
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
 
         [HttpGet("{id}")]

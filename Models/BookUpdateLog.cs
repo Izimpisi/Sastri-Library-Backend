@@ -7,7 +7,7 @@ namespace Sastri_Library_Backend.Models
     {
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Log_ID { get; set; }
+        public int LogId { get; set; }
 
         [Required(ErrorMessage = "Action type is required.")]
         [StringLength(50, ErrorMessage = "Action type cannot exceed 50 characters.")]
@@ -17,9 +17,7 @@ namespace Sastri_Library_Backend.Models
         [StringLength(250, ErrorMessage = "Description cannot exceed 250 characters.")]
         public string Description { get; set; }
 
-        [Required(ErrorMessage = "Timespan is required.")]
-        [StringLength(100, ErrorMessage = "Timespan cannot exceed 100 characters.")]
-        public string Timespan { get; set; }
+        public DateTime ActionTime { get; set; }
 
         [ForeignKey(nameof(User))]
         public virtual string UserId { get; set; }
