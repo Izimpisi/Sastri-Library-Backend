@@ -51,12 +51,94 @@ namespace Sastri_Library_Backend.Controllers
             return Ok(result);
         }
 
-        // Example action method to get all books
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Book>>> GetBooks()
+        public async Task<ActionResult<IEnumerable<FlatBookDto>>> GetBooks()
         {
-            return await _context.Books.ToListAsync();
+            var randomBooks = await _context.Books
+                .OrderBy(b => EF.Functions.Random())
+                .Take(30)
+                .ToListAsync();
+
+            var bookCopies = await _context.BookCopies.ToListAsync();
+
+            var result = randomBooks.Select(book => new FlatBookDto
+            {
+                BookId = book.BookId,
+                Title = book.Title,
+                DatePublished = book.Date_Published, // Note: Adjust property name if necessary
+                Description = book.Description,
+                Author = book.Author,
+                ISBN = book.ISBN,
+                CopyCount = bookCopies.Count(copy => copy.BookId == book.BookId)
+            }).ToList();
+
+            return Ok(result);
         }
+
+
+        [HttpGet("search/list")]
+        public async Task<ActionResult<IEnumerable<FlatBookDto>>> SearchAllBooks(
+    [FromQuery] string query,
+    [FromQuery] string filter)
+        {
+            if (string.IsNullOrEmpty(query) || string.IsNullOrEmpty(filter))
+            {
+                return BadRequest("Query and filter are required.");
+            }
+
+            IQueryable<FlatBookDto> books = filter.ToLower() switch
+            {
+                "isbn" => _context.Books
+                    .Where(b => b.ISBN.Contains(query))
+                    .Select(b => new FlatBookDto
+                    {
+                        BookId = b.BookId,
+                        Title = b.Title,
+                        DatePublished = b.Date_Published, 
+                        Description = b.Description,
+                        Author = b.Author,
+                        ISBN = b.ISBN,
+                        CopyCount = _context.BookCopies.Count(c => c.BookId == b.BookId)
+                    }),
+
+                "title" => _context.Books
+                    .Where(b => b.Title.Contains(query))
+                    .Select(b => new FlatBookDto
+                    {
+                        BookId = b.BookId,
+                        Title = b.Title,
+                        DatePublished = b.Date_Published, 
+                        Description = b.Description,
+                        Author = b.Author,
+                        ISBN = b.ISBN,
+                        CopyCount = _context.BookCopies.Count(c => c.BookId == b.BookId)
+                    }),
+
+                "author" => _context.Books
+                    .Where(b => b.Author.Contains(query))
+                    .Select(b => new FlatBookDto
+                    {
+                        BookId = b.BookId,
+                        Title = b.Title,
+                        DatePublished = b.Date_Published, 
+                        Author = b.Author,
+                        ISBN = b.ISBN,
+                        CopyCount = _context.BookCopies.Count(c => c.BookId == b.BookId)
+                    }),
+
+                _ => Enumerable.Empty<FlatBookDto>().AsQueryable()
+            };
+
+            if (books == null || !books.Any())
+            {
+                return NotFound("No books found.");
+            }
+
+            var result = await books.Take(15).ToListAsync();
+
+            return Ok(result);
+        }
+
 
         [HttpPost("add")]
         public async Task<IActionResult> AddBook([FromBody] Book newBook)
@@ -92,5 +174,18 @@ namespace Sastri_Library_Backend.Controllers
 
             return Ok(book);
         }
+
+        public class FlatBookDto
+        {
+            public int BookId { get; set; }
+            public string Title { get; set; }
+            public string DatePublished { get; set; }
+            public string Description { get; set; }
+            public string Author { get; set; }
+            public string ISBN { get; set; }
+            public int CopyCount { get; set; } // Add CopyCount here
+        }
+
+
     }
 }

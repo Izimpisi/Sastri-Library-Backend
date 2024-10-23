@@ -24,6 +24,7 @@ namespace Sastri_Library_Backend.Models
 
         public int? DaysOverdue { get; set; }
 
+        public bool Settled { get; set; } = false;
 
         [Required]
         public virtual User User { get; set; }

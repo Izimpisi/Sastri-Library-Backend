@@ -34,6 +34,12 @@ namespace Sastri_Library_Backend.Models
         public int BookId { get; set; }
         public virtual Book Book { get; set; }
 
+        [Required]
+        [ForeignKey("BookCopy")]
+        public int CopyId { get; set; }
+
+        public virtual BookCopy BookCopy { get; set; }
+
         public Reservation()
         {
             ReservationDate = DateTime.UtcNow;  

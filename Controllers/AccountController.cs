@@ -6,6 +6,7 @@ using Sastri_Library_Backend.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 
 namespace Sastri_Library_Backend.Controllers
 {
@@ -135,6 +136,64 @@ namespace Sastri_Library_Backend.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Append("Bearer", "", new CookieOptions
+            {
+                Expires = DateTimeOffset.UtcNow.AddDays(-1),
+                Path = "/",
+                SameSite = SameSiteMode.None,
+                HttpOnly = true, 
+                Secure = true,  
+            });
+
+            return Ok("You have been logged out.");
+        }
+
+
+        [HttpGet("all-users")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid user token.");
+            }
+
+            var loggedInUser = await _userManager.FindByIdAsync(userId);
+            if (loggedInUser == null)
+            {
+                return NotFound("Logged-in user not found.");
+            }
+
+            // Check if the logged-in user is a student
+            if (loggedInUser.Role == "Student")
+            {
+                return Forbid("You are not authorized to view this resource.");
+            }
+
+            // Retrieve all users except the logged-in user
+            var users = await _userManager.Users
+                .Where(u => u.Id != userId)
+                .Select(u => new
+                {
+                    u.Id,
+                    u.FirstName,
+                    u.LastName,
+                    u.UserIdNumber,
+                    u.Email,
+                    u.EmailConfirmed,
+                    u.Role
+                })
+                .ToListAsync();
+
+            return Ok(users);
+        }
+
 
 
         private void SetTokenCookie(string token)

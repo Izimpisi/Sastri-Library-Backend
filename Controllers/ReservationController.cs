@@ -25,7 +25,6 @@ namespace Sastri_Library_Backend.Controllers
             _context = context;
         }
 
-        // POST: api/reservation
         [HttpPost]
         public async Task<ActionResult<Reservation>> CreateReservation([FromBody] ReservvationDto reservation)
         {
@@ -49,38 +48,38 @@ namespace Sastri_Library_Backend.Controllers
                 return NotFound("Book not found.");
             }
 
-            if (book.IsOnReservation)
-            {
-                // Find the existing reservation for this book
-                var existingReservation = await _context.Reservations
-                    .FirstOrDefaultAsync(r => r.BookId == book.BookId && r.Active);
+            var copies = await _context.BookCopies.Where(c => c.BookId == book.BookId).ToListAsync();
 
-                if (existingReservation != null && existingReservation.ExpireDate <= DateTime.Now)
+
+            foreach (var copy in copies)
+            {
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.CopyId == copy.CopyId && r.Active && r.ExpireDate <= DateTime.Now);
+
+                if (existingReservation != null)
                 {
-                    // Expire the existing reservation
-                    book.IsOnReservation = false;
                     existingReservation.Active = false;
                     existingReservation.Approved = false;
                     existingReservation.Message = "Expired";
 
-                    // Save the changes to the database
+                    copy.IsOnReservation = false;
+
                     await _context.SaveChangesAsync();
                 }
+
             }
 
-            if (book.IsOnLoan)
-            {
-                return StatusCode(403, "The book is already on loan.");
-            }
+            var availableCopy = copies.FirstOrDefault(c => c.IsAvailable);
 
-            if (book.IsOnReservation)
+            if (availableCopy == null)
             {
-                return StatusCode(403, "The book is reserved.");
+                return StatusCode(403, "Temporarily Unavailable: No available copies of this book.");
             }
 
             Reservation newReservation = new Reservation();
             newReservation.BookId = reservation.BookId;
             newReservation.UserID = userId;
+            newReservation.CopyId = availableCopy.CopyId;
 
 
             _context.Reservations.Add(newReservation);
@@ -89,7 +88,7 @@ namespace Sastri_Library_Backend.Controllers
             return CreatedAtAction(nameof(GetReservation), new { id = newReservation.Id }, reservation);
         }
 
-        // GET: api/reservation/{id}
+
         [HttpGet("{id}")]
         public async Task<ActionResult<Reservation>> GetReservation(int id)
         {
@@ -135,8 +134,6 @@ namespace Sastri_Library_Backend.Controllers
                 r.Book.ISBN,
                 r.Book.Description,
                 r.Book.Date_Published,
-                r.Book.IsOnLoan,
-                r.Book.IsOnReservation
             })
       .ToListAsync();
 
@@ -173,8 +170,6 @@ namespace Sastri_Library_Backend.Controllers
                 r.Book.ISBN,
                 r.Book.Description,
                 r.Book.Date_Published,
-                r.Book.IsOnLoan,
-                r.Book.IsOnReservation
             }).ToListAsync();
 
             return Ok(reservations);
@@ -215,35 +210,36 @@ namespace Sastri_Library_Backend.Controllers
                 return NotFound("Book not found.");
             }
 
-            if (book.IsOnReservation)
-            {
-                // Find the existing reservation for this book
-                var existingReservation = await _context.Reservations
-                    .FirstOrDefaultAsync(r => r.BookId == book.BookId && r.Active);
+            var copies = await _context.BookCopies.Where(c => c.BookId == reservation.BookId).ToListAsync();
 
-                if (existingReservation != null && existingReservation.ExpireDate <= DateTime.Now)
+            foreach (var copy in copies)
+            {
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.CopyId == copy.CopyId && r.Active && r.ExpireDate <= DateTime.Now);
+
+                if (existingReservation != null)
                 {
                     // Expire the existing reservation
-                    book.IsOnReservation = false;
                     existingReservation.Active = false;
                     existingReservation.Approved = false;
                     existingReservation.Message = "Expired";
 
-                    // Save the changes to the database
+                    copy.IsOnReservation = false;
+
                     await _context.SaveChangesAsync();
                 }
+
             }
 
-            if (book.IsOnLoan)
+            var availableCopy = copies.FirstOrDefault(c => c.IsAvailable);
+
+            if (availableCopy == null)
             {
-                return StatusCode(403, "The book is already on loan.");
-            }
-            if (book.IsOnReservation)
-            {
-                return StatusCode(403, "The book is reserved.");
+                return StatusCode(403, "Temporarily Unavailable: No available copies of this book.");
             }
 
-            book.IsOnReservation = true;
+
+            availableCopy.IsOnReservation = true;
             reservation.Active = true;
             reservation.Approved = true;
             reservation.Message = "Approved";
@@ -252,6 +248,63 @@ namespace Sastri_Library_Backend.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent(); // Return 204 No Content on success
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteReservation(int id)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized("Invalid user ID.");
+            }
+
+            var reservation = await _context.Reservations.FindAsync(id);
+            if (reservation == null)
+            {
+                return NotFound("Reservation not found.");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || user.Role != "Admin")
+            {
+                return Forbid("You are not authorized to delete this reservation.");
+            }
+
+            var book = await _context.Books.FindAsync(reservation.BookId);
+            if (book == null)
+            {
+                return NotFound("Book not found.");
+            }
+
+            var copies = await _context.BookCopies.Where(c => c.BookId == book.BookId).ToListAsync();
+
+            foreach (var copy in copies)
+            {
+                var existingReservation = await _context.Reservations
+                    .FirstOrDefaultAsync(r => r.CopyId == copy.CopyId && r.Active && r.ExpireDate <= DateTime.Now);
+
+                if (existingReservation != null)
+                {
+                    existingReservation.Active = false;
+                    existingReservation.Approved = false;
+                    existingReservation.Message = "Expired";
+
+                    copy.IsOnReservation = false;
+
+                    await _context.SaveChangesAsync();
+                }
+
+            }
+
+            if (!reservation.Active)
+            {
+                _context.Reservations.Remove(reservation);
+                await _context.SaveChangesAsync();
+                return NoContent();
+            }
+
+            return StatusCode(403, "Cannot delete an active reservation.");
         }
 
         public class ReservvationDto

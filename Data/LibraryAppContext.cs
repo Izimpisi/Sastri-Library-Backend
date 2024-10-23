@@ -19,5 +19,6 @@ namespace Sastri_Library_Backend.Data
         public DbSet<Payment> Payments { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<Bill> Bills { get; set; }
+        public DbSet<BookCopy> BookCopies { get; set; }
     }
 }

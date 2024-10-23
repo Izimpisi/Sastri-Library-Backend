@@ -30,13 +30,5 @@ namespace Sastri_Library_Backend.Models
         [RegularExpression(@"\d{10}(\d{3})?", ErrorMessage = "ISBN must be a 10 or 13-digit number")]
         public string ISBN { get; set; }
 
-        public bool IsOnLoan { get; set; }
-        public bool IsOnReservation { get; set; }
-
-        public Book()
-        {
-            IsOnLoan = false;
-            IsOnReservation = false;
-        }
     }
 }
