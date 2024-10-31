@@ -181,7 +181,18 @@ namespace Sastri_Library_Backend.Controllers
                 _context.BookUpdateLogs.Add(log);
                 await _context.SaveChangesAsync();
 
-                return CreatedAtAction(nameof(GetBookById), new { id = newBook.BookId }, newBook);
+                var bookWithCopyCount = new
+                {
+                    newBook.BookId,
+                    newBook.Title,
+                    newBook.Author,
+                    newBook.ISBN,
+                    newBook.Description,
+                    DatePublished = newBook.Date_Published,
+                    CopyCount = 0 
+                };
+
+                return Ok(bookWithCopyCount);
             }
             catch (Exception ex)
             {

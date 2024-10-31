@@ -32,13 +32,14 @@ namespace Sastri_Library_Backend.Controllers
                 b.Id,
                 b.CurrentAmountOwing,
                 b.BillPaidAmount,
-                b.DueDate
+                b.DueDate,
+                b.User.FirstName, b.User.LastName,
             }).ToListAsync();
 
             return Ok(bills);
         }
 
-        [HttpGet("/students")]
+        [HttpGet("students")]
         public async Task<ActionResult<IEnumerable<object>>> GetBills()
         {
             // Get the user ID from JWT token claims
@@ -51,7 +52,7 @@ namespace Sastri_Library_Backend.Controllers
                 b.CurrentAmountOwing,
                 b.BillPaidAmount,
                 b.DueDate,
-                b.UserId
+                b.UserId, b.User.FirstName, b.User.LastName
             }).Where(l => l.UserId == userId).ToListAsync();
 
             return Ok(bills);
